@@ -1,35 +1,42 @@
 package com.setung.freelec.springboot2.webservice.kotlin.web
 
-import org.junit.jupiter.api.Assertions.*
+import org.hamcrest.Matchers.`is`
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.*
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.web.servlet.*
+import org.springframework.context.annotation.ComponentScan
+import org.springframework.context.annotation.FilterType
+import org.springframework.security.access.SecurityConfig
+import org.springframework.security.test.context.support.WithMockUser
+import org.springframework.test.context.junit4.SpringRunner
+import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
-import org.hamcrest.Matchers.`is`
 
-@WebMvcTest
-class HelloControllerTest {
 
-    @Autowired
-    lateinit var mvc: MockMvc
+@WebMvcTest(
+    controllers = [HelloController::class],
+    excludeFilters = [ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = arrayOf(SecurityConfig::class))]
+)
+@SpringBootTest
+class HelloControllerTest( private var mvc: MockMvc) {
 
+    @WithMockUser(roles = ["USER"])
     @Test
     fun hello가_리턴된다() {
         val hello = "hello"
-        mvc.perform(get("/hello"))
+        mvc!!.perform(get("/hello"))
             .andExpect(status().isOk)
             .andExpect(content().string(hello))
     }
 
+    @WithMockUser(roles = ["USER"])
     @Test
     fun helloDto가_리턴된다() {
         val name = "hello"
         val amount = 1000
-
-        mvc.perform(
+        mvc!!.perform(
             get("/hello/dto")
                 .param("name", name)
                 .param("amount", amount.toString())
